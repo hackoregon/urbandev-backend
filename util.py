@@ -4,9 +4,12 @@ import tier
 
 
 def getDbConn():
-    '''Return a new database connection and cursor as a tuple'''
-    db = flask.current_app.config['DBCONN']
-    return (db.connection, db.connection.cursor())
+    '''Return a new database connection and cursor as a tuple of (connection, cursor)'''
+    if not hasattr(flask.g, 'dbconn'):
+        # Get factory & create new connection
+        db = flask.current_app.config['DBCONN']
+        flask.g.dbconn = db.connection, db.connection.cursor()
+    return flask.g.dbconn
     
    
 def wktUnpackPoint(wktstr):

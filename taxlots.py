@@ -9,7 +9,7 @@ from util import genMarkdownResult
 
 
    
-def taxlots():
+def taxlots_api():
     return genMarkdownResult('doc/taxlots.md')
 
 
