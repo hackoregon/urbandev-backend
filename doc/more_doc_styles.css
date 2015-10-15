@@ -1,0 +1,18 @@
+h1 {
+	color: #15d;
+}
+
+h4 {
+	color: #b24;
+}
+
+li p strong {
+	color: #084;
+}
+
+.bchange {
+	color: #fff;
+	background-color: #e79759;
+	border: 1px solid #b1c1e8;
+	border-radius: 3px;
+}

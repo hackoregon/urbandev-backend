@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+   <meta charset="utf-8">
+   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+   <meta name="viewport" content="width=device-width, initial-scale=1">
+   <meta name="description" content="Playground for Hack Oregon Urban Development spatio-temporal visualizations">
+   
+   <!-- Basic bootstrap -->
+   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
+   <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+
+   <title>Hack Oregon Urban Dev Test</title>
+   
+   <style>
+      html, body {
+         height: 100%;
+         overflow: hidden;
+      }
+      
+      .widget {
+         margin-bottom: 6px;
+      }
+      
+      .map-container {
+         height: 700px;
+      }
+      
+      #map {
+         /* Make sure gpu hardware accel is on */
+         -webkit-transform: translate3d(0, 0, 0);
+         -moz-transform: translate3d(0, 0, 0);
+         -ms-transform: translate3d(0, 0, 0);
+         transform: translate3d(0, 0, 0);
+         
+         width: 100%;
+         height:100%;
+         min-height: 100%;
+         min-width: 100%;
+         display: block;
+         box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      }
+   </style>
+   
+   <script>
+   
+
+   (function() {
+   
+      var map;
+      var layers = [];
+      var permitsLyr;
+      var nbrhoodLyr;
+   
+      /* Build a query string from the supplied object (dict) */
+      buildQS = function(obj_dict) {
+         var result = [];
+         for(var p in obj_dict) {
+            if(obj_dict.hasOwnProperty(p)) {
+               result.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj_dict[p]));
+            }
+         }
+         return result.join("&");
+      }
+
+   
+      /* Animate colors on all polygons */
+      var doTest = function() {
+         var colors = ['#fff', '#eff', '#dff', '#cff', '#bdc', '#acc', '#9bb', '#8aa', '#799', '#688', '#577', '#466', '#355', '#244', '#133', '#022'];
+         var color = 0;
+         
+         var timerId = setInterval(function() {
+         
+            nbrhoodLyr.eachLayer(function(lyr) {
+               lyr.setStyle({
+                  fillColor: colors[color],
+                  opacity: 0.9
+               });
+            });
+
+            console.log(color);
+            color++;
+            if(color == 16)
+               clearInterval(timerId);
+            
+         }, 1000);
+            
+         
+      };
+      
+      
+      var drawBaseLayers = function() {
+         // set up the map
+         map = new L.Map('map');
+         
+         // Create geojson layers populated from Ajax calls
+         permitsLyr =  L.geoJson();
+         nbrhoodLyr = L.geoJson();
+         
+         // List of layers
+         layers.push(
+            {
+               name: "OSM default",
+               url: 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+               attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
+            },
+            {  
+               name: "Landscape",
+               url: 'http://{s}.tile.thunderforest.com/landscape/{z}/{x}/{y}.png',
+               attribution: 'Map data &copy; <a href="http://thunderforest.com/">Thunderforest</a> contributors'
+            },
+            
+            {  
+               name: "Humanitarian",
+               url: 'http://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+               attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
+            },     
+            
+            {  
+               name: "MapQuest",
+               url: 'http://{s}.mqcdn.com/tiles/1.0.0/osm/{z}/{x}/{y}.png',
+               subdomains: ["otile1", "otile2", "otile3", "otile4"],
+               attribution: 'Data, imagery and map information provided by MapQuest, OpenStreetMap and contributors'
+            },
+            
+            {  
+               name: "Stamen Terrain",
+               url: '//stamen-tiles.a.ssl.fastly.net/terrain/{z}/{x}/{y}.png',
+               attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://creativecommons.org/licenses/by-sa/3.0">CC BY SA</a>.'
+            }     
+         );
+         
+         // Add each base map layer
+         for(var i=0; i<layers.length; i++) {
+            var lyropts = {
+               minZoom: 8, 
+               maxZoom: 18, 
+               attribution: layers[i].attribution
+            };
+            
+            // Optional subdomains attribute
+            if(typeof layers[i].subdomains !== "undefined")
+               lyropts.subdomains = layers[i].subdomains;
+               
+            layers[i]['layer'] = new L.tileLayer(layers[i].url, lyropts);
+         }
+
+         // start the map in Portland
+         map.setView(new L.LatLng(45.5, -122.67), 11);
+         map.addLayer(layers[layers.length-1].layer);
+         
+         // Add all layers to our base layers object
+         var baseLayers = {};
+         for(var i=0; i<layers.length; i++) {
+            baseLayers[layers[i]['name']] = layers[i].layer;  
+         }
+
+         // Add layer selection control 
+         L.control.layers(baseLayers).addTo(map);
+      };   
+      
+      
+      var fetchPermits = function(bbx) {
+
+         var xhr = new XMLHttpRequest();
+         
+         xhr.onreadystatechange = function() {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+               var jr = JSON.parse(xhr.responseText);
+
+               document.getElementById("showCount").innerHTML = jr['features'].length + " permits found"; 
+               
+               // Clear the GeoJSON layer, load received data into it & display on map
+               permitsLyr.clearLayers();
+               permitsLyr.addData(jr);
+               permitsLyr.addTo(map);
+            }
+         }
+
+         var data = {
+            type: 'residential',
+            //neighborhood: 'sunnyside',
+            startdate: '2014-01-01',
+            bounds: bbx.toBBoxString(), 
+            zoom: map.getZoom()
+         };
+         
+         var url = '/permits?' + buildQS(data); //type=residential&neighborhood=sunnyside&startdate=2015-01-01'
+         xhr.open('GET', url, true);
+         
+         xhr.setRequestHeader('content-type', 'application/json');
+         xhr.send(null);
+      };
+      
+      
+      var fetchNeighborhoodBoundaries = function(bbx) {
+         var xhr = new XMLHttpRequest();
+         
+         xhr.onreadystatechange = function() {
+            if(xhr.readyState == 4 && xhr.status == 200) {
+               
+               // Convert geojson string to objects
+               var nbrPolys = JSON.parse(xhr.responseText);
+               
+               nbrhoodLyr.clearLayers();
+
+               // Add each polygon w/ a function to specify fill
+               /*for(var i=0; i<nbrPolys.length; i++) {
+                  var nbrPoly = new L.geoJson(nbrPolys[i]).bindPopup(nbrPolys[i].properties.name);
+                  nbrPoly.setStyle({fillColor: '#21bb11'});
+                  nbrhoodLyr.addLayer(nbrPoly);
+               }*/
+               
+               nbrhoodLyr.addData(nbrPolys);
+               nbrhoodLyr.addTo(map);   // map._onResize(); ??
+            }
+         }
+
+         var data = {
+            bounds: bbx.toBBoxString(), 
+            zoom: map.getZoom(),
+            //name: 'sunnyside,richmond'
+            option: 'intersects'
+         };
+         
+         var url = '/neighborhoods?' + buildQS(data);
+         xhr.open('GET', url, true);
+         xhr.send(null);
+      };
+      
+   
+      var initEvents = function() {
+         map.on('moveend', function(evt) {
+            //console.log('moveend');
+            //console.log(map.getBounds().toBBoxString());
+            //fetchPermits(map.getBounds());
+         });
+         
+         map.on('zoomend', function(evt) {
+            console.log('zoomend');
+         });
+         
+         map.on('viewreset', function(evt) {
+            console.log('viewreset');
+         });
+         
+         document.getElementById('go').addEventListener('click', function() {
+            fetchPermits(map.getBounds());
+         });
+         
+         document.getElementById('btnShowNbr').addEventListener('click', function() {
+            fetchNeighborhoodBoundaries(map.getBounds());
+         });
+         
+         document.getElementById('btnTest').addEventListener('click', function() {
+            doTest();
+         });
+      };
+      
+      
+      document.addEventListener('DOMContentLoaded', function() {
+         // Draw the map
+         drawBaseLayers();   
+         //fetchPermits(map.getBounds());
+         initEvents();
+      });
+      
+      
+   }());
+
+   </script>
+</head>
+<body>
+   <div class="container">
+      <div class="row">
+         <div class="col-md-12">
+            <p></p>
+         </div>
+      </div>
+      <div class="row">
+         <div class="col-md-3">
+            <h4>Urban data viztest</h4>
+            <p id="showCount"></p>
+            <div>
+               <label for="dateQry">Year Range:</label>
+               <div class="widget">
+                  <input class="form-control" id="dateQry" value="2015-04-01 2015-07-01" type="text">
+                  <button class="btn btn-success" id="go" title="Only show permits issued between these dates">Go</button>
+               </div>
+               <div class="widget">
+                  <button class="btn btn-success" id="btnShowNbr" title="Show neighborhoods contained within the viewport">Show Neigborhoods</button>
+                  <button class="btn btn-success" id="btnTest" title="Test">Test</button>
+               </div>
+            </div>   
+            
+         </div>
+         <div class="map-container col-md-9">
+            <div id="map">
+            </div>
+         </div>
+      </div>
+   </div>
+
+   
+   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+   <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+</body>
+</html>
+
+
