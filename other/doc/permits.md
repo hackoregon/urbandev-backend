@@ -23,9 +23,6 @@ Returns: A table or GeoJSON feature collection of building permits that satisfy 
 - address (street address of the parcel)
 - issuedate (date the permit was issued
 - nbrhood (name of Portland neigborhood)
-- value (value in dollars of the change)
-- sqft (size in square feet of the change)
-- units (number of units being changed)
 Response type: use the following file extensions:
 - .geojson - return result as a GeoJSON feature collection
 - .json - return result as a JSON formatted table
@@ -58,9 +55,10 @@ Parameters:
    - note: since this limits the spatial extent of the query, be careful when combining this option with the **bounds** option as a permit must be both within the bounds and in one of the specified neighborhoods to be in the result.
 - **query** (optional):
    - this parameter is used to return the results of a pre-built query. This specifies the name of query to use.
-   - valid formats:
-      - 'perNeighborhoodPerYear': return a table of the number of permits grouped by neighborhood by year. You must use the .json file extension as the only currently supported resource this method returns is a JSON formatted table. The result is structured as an object containing a single list of 'rows' each of which is a 3 element array: [count, year, neighborhood-name]. No spatial data is returned with this query.
-      - example: `/services/permits.json?&type=residential&query=perNeighborhoodPerYear`
+   - valid formats: 
+      - 'perNeighborhoodPerYear': return a table of the number of permits grouped by neighborhood by year. You must use the .json file extension as the only currently supported resource this method returns is a JSON formatted table. The result is structured as a 'rows' object containing a single list of rows each of which is a 3 element array: [count, year, neighborhood-name]
+      - example: /services/permits.json?&type=residential&query=perNeighborhoodPerYear
+   
 ---
 
 ### Data Sources:

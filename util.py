@@ -10,7 +10,7 @@ def getDbConn():
         db = flask.current_app.config['DBCONN']
         flask.g.dbconn = db.connection, db.connection.cursor()
     return flask.g.dbconn
-    
+   
    
 def wktUnpackPoint(wktstr):
     '''Unpack the point coordinates from WKT Point to a tuple'''

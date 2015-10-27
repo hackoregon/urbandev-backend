@@ -1,4 +1,4 @@
-Hack Oregon Urban Data API
+Hack Oregon Data API
 # Portland Datasets
 
 This application exposes a set of micro-services; APIs that can be used for building data visualization mashups. 
@@ -10,8 +10,8 @@ The following datasets are currently available:
 - [Building Permits](/services/permits)
 - [Neighborhood Boundaries](/services/neighborhoods)
 - [Crimes](/services/crimes)
-<!-- - [Taxlots](/services/taxlots)
-- [Census](/services/census) -->
+- [Taxlots](/services/taxlots)
+- [Census](/services/census)
 - [Demolitions](/services/demolitions)
 
 It is assumed that these APIs are called from JavaScript via Ajax calls.

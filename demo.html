@@ -11,6 +11,7 @@
    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css">
    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
 
+   <script src="js/taffy-min.js"></script>
    <title>Hack Oregon Urban Dev Test</title>
    
    <style>
@@ -62,11 +63,62 @@
             }
          }
          return result.join("&");
-      }
+      };
 
+
+      var doTest = function() {
+         
+         /*var rect = [
+            [45.48348421787172, -122.65593528805766],
+            [45.49142704415611, -122.62263298092874]
+         ];
+         
+         var rect = [
+            [45.47467, -122.67029],
+            [45.50155, -122.63957]
+         ];
+                  
+         console.log(rect);
+         L.rectangle(rect, {color: "#ff7800", weight: 1}).addTo(map);
+         map.fitBounds(rect); */
+
+         // 'POLYGON((-122.67029 45.47467,-122.63957 45.47467,-122.63957 45.50155,-122.67029 45.50155,-122.67029 45.47467))'
+      
+         
+         
+         var xhr = new XMLHttpRequest();
+         
+         xhr.onreadystatechange = function() {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+               var jr = JSON.parse(xhr.responseText);
+               
+               taffylist =  [];
+               
+               for(var i=0; i<jr['rows'].length; i++) {
+                  var rec = {
+                     name: jr['rows'][i][0], 
+                     bbx: jr['rows'][i][1]
+                  };
+                  taffylist.push(rec);
+               }
+               
+               console.log(taffylist.length);
+               
+               var db = TAFFY(taffylist);
+               rr = db({name: 'Richmond'}).first();
+               console.log(rr);
+            }
+         }
+
+         var url = '/neighborhoods.json?query=listWithBBX&city=portland'
+         xhr.open('GET', url, true);
+         xhr.send(null);
+      };
+   
+   
    
       /* Animate colors on all polygons */
-      var doTest = function() {
+      var doTest2 = function() {
          var colors = ['#fff', '#eff', '#dff', '#cff', '#bdc', '#acc', '#9bb', '#8aa', '#799', '#688', '#577', '#466', '#355', '#244', '#133', '#022'];
          var color = 0;
          
@@ -186,7 +238,9 @@
             zoom: map.getZoom()
          };
          
-         var url = '/permits?' + buildQS(data); //type=residential&neighborhood=sunnyside&startdate=2015-01-01'
+         //var url = '/permits.geojson?' + buildQS(data); //type=residential&neighborhood=sunnyside&startdate=2015-01-01'
+         // Test cross-origin requests
+         var url = 'http://ec2-52-88-193-136.us-west-2.compute.amazonaws.com/services/permits.geojson?' + buildQS(data);
          xhr.open('GET', url, true);
          
          xhr.setRequestHeader('content-type', 'application/json');
@@ -224,7 +278,7 @@
             option: 'intersects'
          };
          
-         var url = '/neighborhoods?' + buildQS(data);
+         var url = '/neighborhoods.geojson?' + buildQS(data);
          xhr.open('GET', url, true);
          xhr.send(null);
       };
@@ -255,6 +309,11 @@
          
          document.getElementById('btnTest').addEventListener('click', function() {
             doTest();
+         });
+         
+         
+         map.on('click', function(e) {
+             console.log(e.latlng);
          });
       };
       
