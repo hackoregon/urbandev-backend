@@ -92,7 +92,8 @@ def permits_api(fileext=None):
     db, cur = getDbConn()
     cur.execute(sql % (mbrPolyWKT,), qParams)
    
-    # Convert result to GeoJSON using default CRS
+    # Convert result to GeoJSON using default CRS. If this profiles to be slow
+    # are a great opportunities for caching the GeoJSON 
     d = []
     for row in cur:
         d.append(geoJSONBuildPoint(*wktUnpackPoint(row[0]), prop_dict={

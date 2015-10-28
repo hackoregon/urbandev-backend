@@ -136,7 +136,8 @@ def neighborhoods_api(fileext=None):
         
         d = []
         for row in cur:
-            # Convert neighborhood Polygons & MultiPolygons to GeoJson
+            # Convert neighborhood Polygons & MultiPolygons to GeoJson. If this profiles to be slow
+            # are a great opportunities for caching the GeoJSON 
             shp = shapely.wkt.loads(row[2].decode("ascii"))
             gj = geojson.Feature(geometry=shp, properties={'id': row[0], 'name': row[1]})
             d.append(gj)
