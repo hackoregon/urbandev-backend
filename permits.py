@@ -3,7 +3,7 @@ import os
 import sys
 
 # Web app imports
-from flask import abort, request, Response, jsonify
+from flask import abort, request, Response, jsonify, make_response
 
 # Our utilities & libs
 import consts
@@ -18,7 +18,7 @@ def permits_api(fileext=None):
     # Required argument. One of 'residential'. Will eventually support 'commercial' as well
     permitType = request.args.get('type')
     if not permitType:
-        return 'Error: Must supply permitType arg'
+        return make_response('Error: Must supply permitType arg', 400)
         
     # Read optional params
     bounds = request.args.get('bounds')    
@@ -47,14 +47,14 @@ def permits_api(fileext=None):
         
     # Spatial Queries
     if fileext != 'geojson':
-        return 'Error: Unknown file type extension'
+        return make_response('Error: Unknown file type extension', 400)
     
     if bounds:
         try:
             # bounds is x1, y1, x2, y2
             ext = [float(pt) for pt in bounds.split(',')]
         except ValueError:
-            return 'Error: Bounds values must be floats'
+            return make_response('Error: Bounds values must be floats', 400)
     else:
         # Use the default BBX of the entire city
         ext = consts.PDX_BOUNDING_BOX

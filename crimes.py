@@ -2,7 +2,7 @@
 import os, sys
 
 # Web app imports
-from flask import abort, request, Response, jsonify
+from flask import abort, request, Response, jsonify, make_response
 
 # Our utilities & libs
 import consts
@@ -21,19 +21,19 @@ def crimes_api(fileext=None):
     
     # Remove later if we return spatial data
     if fileext != 'json':
-        return 'Error: Must use file extension .json (for now)'
+        return make_response('Error: Must use file extension .json (for now)', 400)
     
     
     if queryType and fileext == 'json':
         if queryType == 'perNeighborhoodPerYear':
             if not year:
-                return 'Error: must supply year parameter'
+                return make_response('Error: must supply year parameter', 400)
                 
             startRange = year + '-01-01'
             try:
                 endRange = int(year)
             except ValueError:
-                return 'Error: year must be a number between 2004->2014'
+                return make_response('Error: year must be a number between 2004->2014', 400)
             
             endRange = str(endRange+1) + '-01-01'
             
@@ -54,7 +54,7 @@ def crimes_api(fileext=None):
                             'rows': [(row[0], row[1]) for row in cur]})
 
 
-    return 'Error: unknown query option'
+    return make_response('Error: unknown query option', 400)
 
 
 

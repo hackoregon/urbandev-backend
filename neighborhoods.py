@@ -27,7 +27,7 @@ def neighborhoods_api(fileext=None):
     
     
     if fileext not in ('json', 'geojson'):
-       return 'Error: missing or invalid file extension'
+       return make_response('Error: missing or invalid file extension', 400)
     
     
     if queryType and fileext == 'json':
@@ -98,7 +98,7 @@ def neighborhoods_api(fileext=None):
                 # bounds is x1, y1, x2, y2
                 ext = [float(pt) for pt in bounds.split(',')]
             except ValueError:
-                return 'Error: Bounds values must be floats'
+                return make_response('Error: Bounds values must be floats', 400)
         else:
             # Use the default BBX of the entire city
             ext = consts.PDX_BOUNDING_BOX
