@@ -1,0 +1,17 @@
+# Environment configuration
+# This file holds connection parameters to the database,
+# so do not want to commit it accidentally, which might
+# end up publishing the password to GitHub.
+config.py
+
+# Development environment
+# These files and directories are needed for various development
+# environment tools. So they are local to the individual
+# developer and should not be committed to the shared repository.
+.idea/
+ve/
+venv/
+
+# Mac OS X files
+.DS_Store
+
