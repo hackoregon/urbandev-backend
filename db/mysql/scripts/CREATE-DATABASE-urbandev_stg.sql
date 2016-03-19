@@ -1,1 +1,0 @@
-CREATE DATABASE `urbandev_stg` /*!40100 DEFAULT CHARACTER SET latin1 */;
